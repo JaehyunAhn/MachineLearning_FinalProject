@@ -7,6 +7,7 @@ from scipy.io import loadmat
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.cross_validation import cross_val_score
 from DataModule import *
 
 """
@@ -35,14 +36,14 @@ test_list = {'label': label_index2, 'data': image_arr2}
 print("Collect training/testing dataset..\n")
 train = data_list
 train = collect_data(object_dataset=objectA['objectA'],
-                     label_name=0,
+                     label_name='A',
                      target=data_list)
 train = collect_data(object_dataset=objectB['objectB'],
-                     label_name=1,
+                     label_name='B',
                      target=data_list)
 test = test_list
 test = collect_data(object_dataset=test_set['test_set'],
-                    label_name=2,
+                    label_name='B',
                     target=test_list)
 
 train_data = np.vstack(train['data'])
@@ -57,15 +58,17 @@ clf_rf = RandomForestClassifier()
 clf_rf.fit(train_data, train_label)
 y_pred_rf = clf_rf.predict(test_data)
 print("-Random Forest Pred:\t", y_pred_rf)
-print("\n")
+scores = cross_val_score(clf_rf, train_data, train_label, cv=10)
+print("Accuracy: %0.2f (+/- %0.2f)\n" % (scores.mean(), scores.std() / 2))
 
 # Linear SVM
 print("LINEAR SUPPORT VECTOR MACHINE")
 clf_svm = LinearSVC()
 clf_svm.fit(train_data, train_label)
 y_pred_svm = clf_svm.predict(test_data)
-print("-LSVM Pred:\t\t\t", y_pred_rf)
-print("\n")
+print("-LSVM Pred:\t\t\t", y_pred_svm)
+scores = cross_val_score(clf_svm, train_data, train_label, cv=10)
+print("Accuracy: %0.2f (+/- %0.2f)\n" % (scores.mean(), scores.std() / 2))
 
 # Support Vector Classifier
 print("SUPPORT VECTOR CLASSIFIER")
@@ -73,7 +76,8 @@ clf_svc = SVC()
 clf_svc.fit(train_data, train_label)
 y_pred_svc = clf_svc.predict(test_data)
 print("-SVC Pred:\t\t\t", y_pred_svc)
-print("\n")
+scores = cross_val_score(clf_svc, train_data, train_label, cv=10)
+print("Accuracy: %0.2f (+/- %0.2f)\n" % (scores.mean(), scores.std() / 2))
 
 # KNN Classifier
 print("K-NEAREST NEIGHBOR CLASSIFIER")
@@ -81,34 +85,33 @@ clf_knn = KNeighborsClassifier()
 clf_knn.fit(train_data, train_label)
 y_pred_knn = clf_knn.predict(test_data)
 print("-KNN Pred:\t\t\t", y_pred_knn)
-print("\n")
+scores = cross_val_score(clf_knn, train_data, train_label, cv=10)
+print("Accuracy: %0.2f (+/- %0.2f)\n" % (scores.mean(), scores.std() / 2))
 
 # LIBSVM is not supported in OS X (Windows Only)
 
-print("Learning is done.")
+print("Learning is done.\n")
+
+print("<RF >= LSVC > SVC > K-NN>")
+word = ''
+for i in range(len(y_pred_rf)):
+    word = word + y_pred_rf[i]
+print(word)
+word = ''
+for i in range(len(y_pred_svc)):
+    word = word + y_pred_svc[i]
+print(word)
+word = ''
+for i in range(len(y_pred_svm)):
+    word = word + y_pred_svm[i]
+print(word)
+word = ''
+for i in range(len(y_pred_knn)):
+    word = word + y_pred_knn[i]
+print(word)
 """
 Unscaled Priority
 
 RF > SVC > LSVC > KNN
-[1 0 0 1 1 1 0 1 0 1 0 1 0 0 1 1 0 0 1 0 1 1 0 0 0 1 0 0 0 1 1 1 0 0 1 1 1 1 0 0 0 1 0 1 1 1 0 0]
-[0 1 1 1 1 0 0 0 0 1 1 1 1 0 1 1 0 0 0 1 1 1 0 0 0 1 0 0 0 1 1 0 0 0 1 0 0 1 1 0 0 1 1 1 1 1 0 1]
-[0 0 0 1 1 0 0 0 0 1 0 1 1 1 1 1 0 0 0 0 1 1 0 0 0 1 0 0 0 1 1 0 0 0 1 0 0 1 1 0 0 1 1 1 1 1 0 1]
-[0 0 0 1 1 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 1 1 0 0 0 1 0 0 0 1 1 0 0 0 1 0 0 1 0 0 0 1 0 1 1 1 0 0]
 
-[1 1 1 1 1 0 0 0 0 1 1 1 0 0 1 1 1 1 1 0 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 0 0 1 1 1 0 1 0 1 1 1 0 0]
-[1 1 1 1 1 0 0 0 0 1 1 1 0 0 1 1 1 1 1 0 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 0 0 1 1 1 0 1 0 1 1 1 0 0]
-[1 1 1 1 1 0 0 0 0 1 1 1 0 0 1 1 1 1 1 0 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 0 0 1 1 1 0 1 0 1 1 1 0 0]
-[1 1 1 1 1 0 0 0 0 1 1 1 0 0 1 1 1 1 1 0 1 1 1 1 1 1 0 0 0 1 1 1 1 1 1 0 0 1 1 1 0 1 0 1 1 1 0 0]
-
-[1 0 0 1 1 1 0 1 0 1 0 1 0 0 1 1 0 0 1 0 1 1 0 0 0 1 0 0 0 1 1 1 0 0 1 1 1 1 0 0 0 1 0 1 1 1 0 0]
-[0 1 1 1 1 0 0 0 0 1 1 1 1 0 1 1 0 0 0 1 1 1 0 0 0 1 0 0 0 1 1 0 0 0 1 0 0 1 1 0 0 1 1 1 1 1 0 1]
-[0 0 0 1 1 0 0 0 0 1 0 1 1 1 1 1 0 0 0 0 1 1 0 0 0 1 0 0 0 1 1 0 0 0 1 0 0 1 1 0 0 1 1 1 1 1 0 1]
-[0 0 0 1 1 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 1 1 0 0 0 1 0 0 0 1 1 0 0 0 1 0 0 1 0 0 0 1 0 1 1 1 0 0]
-
-[0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 1 1 0 0 0 0 0 0 0 1 1 0 0 0 1 0 0 1 0 0 0 1 0 1 1 1 0 0]
-[0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 1 1 0 0 0 0 0 0 0 1 1 0 0 0 1 0 0 1 0 0 0 1 0 1 1 1 0 0]
-[0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 1 1 0 0 0 0 0 0 0 1 1 0 0 0 1 0 0 1 0 0 0 1 0 1 1 1 0 0]
-[0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 1 1 0 0 0 0 0 0 0 1 1 0 0 0 1 0 0 1 0 0 0 1 0 1 1 1 0 0]
-
-[
 """
